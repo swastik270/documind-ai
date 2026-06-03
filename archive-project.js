@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcDir = __dirname;
-const archiveFile = path.join(__dirname, 'project_archive.json');
+const srcDir = '/Users/swastikdey/document';
+const archiveFile = '/Users/swastikdey/document/project_archive.json';
 
 const files = [
   'package.json',
@@ -26,8 +26,6 @@ const files = [
   'src/app/page.tsx',
   'src/app/api/auth/[...nextauth]/route.ts',
   'src/app/api/auth/signup/route.ts',
-  'src/app/api/auth/forgot-password/route.ts',
-  'src/app/api/auth/reset-password/route.ts',
   'src/app/api/notifications/route.ts',
   'src/app/api/notifications/[id]/route.ts',
   'src/app/api/notifications/read/route.ts',

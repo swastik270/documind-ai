@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test-read": "node -e \"const fs = require('fs'); fs.writeFileSync('/Users/swastikdey/document/test_container_write.txt', 'hello from container'); console.log('Write success!');\"",
-    "archive": "node archive-project.js"
+    "archive": "node archive-project.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
