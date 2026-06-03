@@ -1,0 +1,181 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProjectType {
+  GIT
+  ZIP
+  SCHEMA
+}
+
+enum ProjectStatus {
+  PENDING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+enum DocType {
+  OVERVIEW
+  README
+  API
+  MODULES
+  ARCHITECTURE
+  DATABASE
+  SETUP
+  USER_GUIDE
+  TROUBLESHOOTING
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String?        @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?        // Hashed password for email auth
+  role          Role           @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  projects      Project[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  type          ProjectType
+  status        ProjectStatus @default(PENDING)
+  sourceUrl     String?       // GitHub repo URL or uploaded ZIP/Schematic URL
+  tokenUsage    Int           @default(0)
+  fileCount     Int           @default(0)
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files         File[]
+  documents     Document[]
+  reviews       Review[]
+  chats         Chat[]
+  exports       Export[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model File {
+  id        String   @id @default(cuid())
+  name      String
+  path      String
+  content   String   @db.Text
+  language  String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  type      DocType
+  title     String
+  content   String   @db.Text
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  score       Int      @default(100) // Code quality score
+  bugs        Json?    // Detailed list of bugs found
+  security    Json?    // List of security vulnerabilities
+  performance Json?    // List of performance bottlenecks
+  suggestions Json?    // Custom improvement recommendations
+  report      String   @db.Text
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  role      String   // "user" or "assistant"
+  message   String   @db.Text
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+}
+
+model Export {
+  id          String   @id @default(cuid())
+  format      String   // "PDF", "MD", "DOCX"
+  downloadUrl String?  // Optional S3 or local download path
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
